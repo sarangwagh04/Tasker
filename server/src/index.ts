@@ -31,23 +31,31 @@ app.use("/api/tasks", taskRoutes);
 import bcrypt from "bcryptjs";
 import User, { UserRole } from "./models/User.model";
 
-// Seed Admin User
-const seedAdmin = async () => {
+// Seed Users
+const seedUsers = async () => {
   try {
-    const adminExists = await User.findOne({ email: "admin@taskmanager.com" });
-    if (!adminExists) {
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash("Pass@123", salt);
-      await User.create({
-        name: "Admin",
-        email: "admin@taskmanager.com",
-        passwordHash,
-        role: UserRole.ADMIN,
-      });
-      console.log("Admin user seeded successfully.");
+    const usersToSeed = [
+      { name: "Admin", email: "admin@taskmanager.com", role: UserRole.ADMIN },
+      { name: "Manager", email: "manage@taskmanager.com", role: UserRole.MANAGER },
+      { name: "User", email: "user@taskmanager.com", role: UserRole.USER }
+    ];
+
+    for (const user of usersToSeed) {
+      const exists = await User.findOne({ email: user.email });
+      if (!exists) {
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash("Pass@123", salt);
+        await User.create({
+          name: user.name,
+          email: user.email,
+          passwordHash,
+          role: user.role,
+        });
+        console.log(`${user.role} user seeded successfully.`);
+      }
     }
   } catch (error) {
-    console.error("Error seeding admin:", error);
+    console.error("Error seeding users:", error);
   }
 };
 
@@ -55,5 +63,5 @@ const seedAdmin = async () => {
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  seedAdmin();
+  seedUsers();
 });

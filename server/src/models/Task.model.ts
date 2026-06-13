@@ -5,6 +5,7 @@ export interface ITask extends Document {
   description: string;
   status: "Pending" | "In Progress" | "Completed";
   createdBy: mongoose.Types.ObjectId;
+  assignedTo: mongoose.Types.ObjectId;
 }
 
 const TaskSchema: Schema = new Schema(
@@ -17,6 +18,7 @@ const TaskSchema: Schema = new Schema(
       default: "Pending",
     },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    assignedTo: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }
 );

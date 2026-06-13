@@ -96,4 +96,51 @@ router.get("/me", protect, async (req: Request, res: Response): Promise<void> =>
   }
 });
 
+// @route   GET /api/auth/users
+// @desc    Get all users (Admin & Manager)
+// @access  Private (Admin, Manager)
+router.get("/users", protect, authorize(UserRole.ADMIN, UserRole.MANAGER), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const users = await User.find().select("-passwordHash").sort({ createdAt: -1 });
+    res.json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// @route   PUT /api/auth/users/:id
+// @desc    Update user info (Admin only)
+// @access  Private (Admin)
+router.put("/users/:id", protect, authorize(UserRole.ADMIN), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    user.role = req.body.role || user.role;
+
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      user.passwordHash = await bcrypt.hash(req.body.password, salt);
+    }
+
+    const updatedUser = await user.save();
+    res.json({
+      _id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;
